@@ -32,16 +32,31 @@ const EditMovie = () => {
     runtime: "",
     mpaa_rating: "",
     description: "",
+    genres: [],
+    genresArray: [ Array(13).fill(false) ],
   })
 
   // get id from the URL
   let { id } = useParams();
+  if (id === undefined) {
+    id = 0;
+  }
 
   useEffect(() => {
     if (jwtToken === "") {
       navigate("/login");
       return;
     }
+
+    if (id === 0) {
+      // adding a movie
+
+    } {
+      // editing an existing movie
+
+    }
+
+
   }, [ jwtToken, navigate ])
 
   const handleSubmit = (event) => {
@@ -116,6 +131,11 @@ const EditMovie = () => {
           errorMsg={"Please enter a description"}
           errorDiv={hasError("description") ? "text-danger" : "d-none"}
         />
+
+        <hr />
+
+        <h3>Genres</h3>
+
       </form>
     </div>
   )
