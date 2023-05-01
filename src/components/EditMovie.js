@@ -5,6 +5,7 @@ import Input from "./form/Input"
 import Select from "./form/Select"
 import TextArea from "./form/TextArea"
 import Checkbox from "./form/Checkbox"
+import Swal from "sweetalert2";
 
 const EditMovie = () => {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ const EditMovie = () => {
     { id: "PG", value: "PG" },
     { id: "PG13", value: "PG13" },
     { id: "R", value: "R" },
-    { id: "NC17", value: "G" },
+    { id: "NC17", value: "NC17" },
     { id: "18A", value: "18A" },
   ]
 
@@ -34,7 +35,7 @@ const EditMovie = () => {
     mpaa_rating: "",
     description: "",
     genres: [],
-    genresArray: [ Array(13).fill(false) ],
+    genres_array: [ Array(13).fill(false) ],
   })
 
   // get id from the URL
@@ -59,7 +60,7 @@ const EditMovie = () => {
         mpaa_rating: "",
         description: "",
         genres: [],
-        genresArray: [ Array(13).fill(false) ],
+        genres_array: [ Array(13).fill(false) ],
       })
 
       const headers = new Headers();
@@ -80,7 +81,7 @@ const EditMovie = () => {
           })
 
           setMovie(m => ({
-            ...movie,
+            ...m,
             genres: checks,
             genres_array: [],
           }))
@@ -89,7 +90,7 @@ const EditMovie = () => {
           console.log(err);
         })
 
-    } {
+    } else {
       // editing an existing movie
 
     }
@@ -99,9 +100,40 @@ const EditMovie = () => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
+
+    let errors = [];
+    let required = [
+      { field: movie.title, name: "title" },
+      { field: movie.release_date, name: "release_date" },
+      { field: movie.runtime, name: "runtime" },
+      { field: movie.description, name: "description" },
+      { field: movie.mpaa_rating, name: "mpaa_rating" },
+    ]
+
+    required.forEach(function (obj) {
+      if (obj.field === "") {
+        errors.push(obj.name);
+      }
+    })
+
+
+    if (movie.genres_array.length === 0) {
+      Swal.fire({
+        title: 'Error!',
+        text: 'You must choose at  least one genre',
+        icon: 'error',
+        confirmButtonText: 'OK',
+      })
+      errors.push("genres");
+    }
+
+    setErrors(errors);
+    if (errors.length > 0) {
+      return false;
+    }
   }
 
-  const handleChange = (event) => {
+  const handleChange = (name) => (event) => {
     let value = event.target.value;
     let name = event.target.name;
     setMovie({
@@ -115,12 +147,27 @@ const EditMovie = () => {
     console.log("value in handleCheck:", event.target.value);
     console.log("checked is", event.target.checked);
     console.log("position is", position);
+
+    let tmpArr = movie.genres;
+    tmpArr[ position ].checked = !tmpArr[ position ].checked;
+
+    let tmpIDs = movie.genres_array;
+    if (!event.target.checked) {
+      tmpIDs.splice(tmpIDs.indexOf(event.target.value));
+    } else {
+      tmpIDs.push(parseInt(event.target.value, 10));
+    }
+
+    setMovie({
+      ...movie,
+      genres_array: tmpIDs,
+    })
   }
   return (
     <div>
       <h2>Add/Edit Movie</h2>
       <hr />
-      <pre>{JSON.stringify(movie, null, 3)}</pre>
+      {/* <pre>{JSON.stringify(movie, null, 3)}</pre> */}
 
       <form onSubmit={handleSubmit}>
         <input type="hidden" name="id" value={movie.id} id="id"></input>
@@ -132,7 +179,7 @@ const EditMovie = () => {
           value={movie.title}
           onChange={handleChange("title")}
           errorDiv={hasError("title") ? "text-danger" : "d-none"}
-          errorMSg={"Please enter a title"}
+          errorMsg={"Please enter a title"}
         />
 
         <Input
@@ -143,7 +190,7 @@ const EditMovie = () => {
           value={movie.release_date}
           onChange={handleChange("release_date")}
           errorDiv={hasError("release_date") ? "text-danger" : "d-none"}
-          errorMSg={"Please enter a release date"}
+          errorMsg={"Please enter a release date"}
         />
 
         <Input
@@ -154,7 +201,7 @@ const EditMovie = () => {
           value={movie.runtime}
           onChange={handleChange("runtime")}
           errorDiv={hasError("runtime") ? "text-danger" : "d-none"}
-          errorMSg={"Please enter a runtime"}
+          errorMsg={"Please enter a runtime"}
         />
 
         <Select
@@ -183,7 +230,7 @@ const EditMovie = () => {
 
         {movie.genres && movie.genres.length > 1 &&
           <>
-            {Array.from(movie.genres).map((g, index) => {
+            {Array.from(movie.genres).map((g, index) =>
               <Checkbox
                 title={g.genre}
                 name={"genre"}
@@ -193,9 +240,12 @@ const EditMovie = () => {
                 value={g.id}
                 checked={movie.genres[ index ].checked}
               />
-            })}
+            )}
           </>
         }
+
+        <hr />
+        <button className="btn btn-primary">Save</button>
 
       </form>
     </div>
